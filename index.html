@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAR Arts QR Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="url"], input[type="range"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input[type="url"]:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        .size-display {
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 5px;
+        }
+        
+        .color-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .color-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        input[type="color"] {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        #qrcode {
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+        
+        .download-section {
+            margin-top: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .star-pattern {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="star-pattern"></div>
+        <h1>STAR Arts QR Generator</h1>
+        <p style="color: #666; margin-bottom: 30px;">Bridge the physical and digital realms</p>
+        
+        <div class="input-group">
+            <label for="url">Enter URL or Text:</label>
+            <input type="url" id="url" placeholder="https://example.com or any text" />
+        </div>
+        
+        <div class="input-group">
+            <label for="size">QR Code Size:</label>
+            <input type="range" id="size" min="100" max="500" value="200" />
+            <div class="size-display" id="sizeDisplay">200 x 200 pixels</div>
+        </div>
+        
+        <div class="input-group">
+            <label>Colors:</label>
+            <div class="color-group">
+                <div class="color-input">
+                    <input type="color" id="foreground" value="#000000" />
+                    <small>Foreground</small>
+                </div>
+                <div class="color-input">
+                    <input type="color" id="background" value="#ffffff" />
+                    <small>Background</small>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="generateQR()">Generate QR Code</button>
+        
+        <div id="qrcode"></div>
+        
+        <div class="download-section hidden" id="downloadSection">
+            <button onclick="downloadQR()">Download QR Code</button>
+            <button onclick="copyToClipboard()">Copy to Clipboard</button>
+        </div>
+        
+        <div class="footer">
+            <p>Free QR Code Generator - No limits, no subscriptions</p>
+        </div>
+    </div>
+
+    <script>
+        let currentQR = null;
+        
+        // Update size display
+        document.getElementById('size').addEventListener('input', function() {
+            const size = this.value;
+            document.getElementById('sizeDisplay').textContent = `${size} x ${size} pixels`;
+        });
+        
+        // Generate QR code
+        function generateQR() {
+            const url = document.getElementById('url').value;
+            const size = parseInt(document.getElementById('size').value);
+            const foreground = document.getElementById('foreground').value;
+            const background = document.getElementById('background').value;
+            
+            if (!url.trim()) {
+                alert('Please enter a URL or text to generate QR code');
+                return;
+            }
+            
+            // Clear previous QR code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            // Create canvas for QR code
+            const canvas = document.createElement('canvas');
+            qrContainer.appendChild(canvas);
+            
+            // Generate QR code
+            currentQR = new QRious({
+                element: canvas,
+                value: url,
+                size: size,
+                foreground: foreground,
+                background: background,
+                level: 'M'
+            });
+            
+            // Show download section
+            document.getElementById('downloadSection').classList.remove('hidden');
+        }
+        
+        // Download QR code
+        function downloadQR() {
+            if (!currentQR) return;
+            
+            const canvas = currentQR.element;
+            const link = document.createElement('a');
+            link.download = 'star-arts-qr-code.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Copy to clipboard
+        async function copyToClipboard() {
+            if (!currentQR) return;
+            
+            const canvas = currentQR.element;
+            try {
+                canvas.toBlob(async (blob) => {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    alert('QR code copied to clipboard!');
+                });
+            } catch (err) {
+                alert('Could not copy to clipboard. Please use the download button instead.');
+            }
+        }
+        
+        // Generate QR when Enter is pressed
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html>
